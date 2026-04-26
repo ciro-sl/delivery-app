@@ -1,0 +1,12 @@
+import base64
+from pathlib import Path
+
+path = Path('src/assets/local.jpeg')
+if path.exists():
+    print('src/assets/local.jpeg already exists')
+else:
+    data = base64.b64decode(
+        '/9j/4AAQSkZJRgABAQAAAQABAAD/2wCEAAkGBxISEhUQEhIVFRUVFxUVFRUVFRUVFRUXFhUVFRUYHSggGBolHRUVITEhJSkrLi4uFx8zODMsNygtLisBCgoKDg0OFxAQFS0dFR0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLf/AABEIAKABKwMBIgACEQEDEQH/xAAcAAACAgMBAQAAAAAAAAAAAAADBAIFAAEGBwj/xABAEAABAwIEAwYEBAQFBAEFAAABAgMRACEEBRIxQVEGEyJhcYEykaGxBzJCUtFC0fAjYnKCksLxBxQzRGOiwuH/xAAbAQEAAwEBAQEAAAAAAAAAAAAAAQIDBAUGB//EADYRAAICAQIEBAMEAwcFAQAAAAECAAMRBBIhMUFRBRNhcYGRobHBI0Kh8CKx4fAUUuHxM5KCk6LC/9oADAMBAAIRAxEAPwD8WiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigDXf/2Q=='
+    )
+    path.write_bytes(data)
+    print('created src/assets/local.jpeg')

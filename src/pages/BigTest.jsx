@@ -1,0 +1,1 @@
+import React from 'react'; const BigTest = () => { return <div className="bg-white p-4"><h1>Hello World</h1><p>This is a longer content with many characters and symbols: !@#$%^&*()_+{}[]|\\:;<>,.?/ and some emojis 🎉🚀✨</p></div>; }; export default BigTest;
