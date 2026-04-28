@@ -13,15 +13,14 @@
  */
 import { useMemo, useState } from 'react'
 
-const MenuManagement = ({ menuItems, availableCategories = [], addMenuItem, updateMenuItem, deleteMenuItem, darkMode }) => {
+const MenuManagement = ({ menuItems, availableCategories = [], addMenuItem, updateMenuItem, deleteMenuItem, addCategory, darkMode }) => {
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [modalType, setModalType] = useState('product')
   const [modalMode, setModalMode] = useState('create')
   const [editingItem, setEditingItem] = useState(null)
   const [categoryInput, setCategoryInput] = useState('')
   const [photoPreview, setPhotoPreview] = useState('')
-  const [localCategories, setLocalCategories] = useState([])
-  const [formData, setFormData] = useState({
+    const [formData, setFormData] = useState({
     name: '',
     category: 'extras',
     description: '',
@@ -36,10 +35,9 @@ const MenuManagement = ({ menuItems, availableCategories = [], addMenuItem, upda
       ...new Set([
         ...(availableCategories || []).filter((cat) => cat && cat.toLowerCase() !== 'todas'),
         ...menuItems.map((item) => item.category.toLowerCase()),
-        ...localCategories,
       ]),
     ],
-    [availableCategories, localCategories, menuItems],
+    [availableCategories, menuItems],
   )
 
   const resetForm = () => {
@@ -106,38 +104,60 @@ const MenuManagement = ({ menuItems, availableCategories = [], addMenuItem, upda
     setPhotoPreview(value)
   }
 
-  const handleSaveCategory = () => {
-    const cleanName = categoryInput.trim().toLowerCase()
+  const handleSaveCategory = async () => {
+    const cleanName = categoryInput.trim()
     if (!cleanName) {
       return alert('Ingrese un nombre de categoría válido.')
     }
-    if (categoryList.includes(cleanName)) {
+    if (categoryList.includes(cleanName.toLowerCase())) {
       return alert('Esa categoría ya existe.')
     }
-    setLocalCategories((prev) => [...prev, cleanName])
-    closeModal()
+    
+    try {
+      await addCategory({
+        name: cleanName,
+        display_order: categoryList.length
+      })
+      closeModal()
+    } catch (error) {
+      alert('Error al crear categoría: ' + error.message)
+    }
   }
 
-  const handleSaveProduct = () => {
+  const handleSaveProduct = async () => {
     if (!formData.name.trim()) return alert('El producto necesita un nombre.')
     const priceNumber = Number(formData.price)
     if (!priceNumber || Number.isNaN(priceNumber)) return alert('Precio normal inválido.')
+    
+    // Encontrar el ID de la categoría
+    const categoryName = formData.category.trim() || 'extras'
+    const categoryMap = {
+      'pizzas': 1,
+      'bebidas': 2, 
+      'combos': 3,
+      'postres': 4
+    }
+    const categoryId = categoryMap[categoryName.toLowerCase()] || 1
+    
     const item = {
       name: formData.name.trim(),
-      category: formData.category.trim() || 'extras',
+      category_id: categoryId,
       description: formData.description.trim(),
-      price: priceNumber,
-      priceLarge: formData.priceLarge ? Number(formData.priceLarge) : undefined,
+      price_small: priceNumber,
+      price_large: formData.priceLarge ? Number(formData.priceLarge) : null,
       image: formData.image || formData.imageUrl || '',
     }
 
-    if (modalMode === 'edit' && editingItem) {
-      updateMenuItem(editingItem.id, item)
-    } else {
-      addMenuItem(item)
+    try {
+      if (modalMode === 'edit' && editingItem) {
+        await updateMenuItem(editingItem.id, item)
+      } else {
+        await addMenuItem(item)
+      }
+      closeModal()
+    } catch (error) {
+      alert('Error al guardar producto: ' + error.message)
     }
-
-    closeModal()
   }
 
   const handleEdit = (item) => openProductModal('edit', item)

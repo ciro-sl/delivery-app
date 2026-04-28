@@ -6,6 +6,8 @@ const categoryIcons = {
   pizzas: '🍕',
   hamburguesas: '🍔',
   bebidas: '🥤',
+  combos: '🍱',
+  postres: '🍰',
   extras: '🍟'
 };
 
@@ -56,7 +58,7 @@ const MenuItem = ({ item }) => {
           <div>
             <p className="text-sm text-gray-600 dark:text-gray-400">Precio</p>
             <p className="text-3xl font-bold text-amarillo">
-              ${item.price.toLocaleString()}
+              ${(item.price_small || item.price).toLocaleString()}
             </p>
           </div>
           <div className="flex items-center gap-3 rounded-full bg-gray-100 dark:bg-white/10 px-3 py-2 text-sm text-black dark:text-white shadow-md shadow-gray-400/50 dark:shadow-white/10">
@@ -84,15 +86,15 @@ const MenuItem = ({ item }) => {
           <button
             type="button"
             className="rounded-full bg-gradient-to-r from-verde to-emerald-400 px-4 py-3 text-sm font-semibold text-white transition-all duration-300 hover:from-emerald-500 hover:to-lime-400 hover:scale-[1.02] active:scale-95 shadow-lg shadow-emerald-700/40 dark:shadow-emerald-500/30"
-            onClick={() => handleAdd('Individual', item.price)}
+            onClick={() => handleAdd('Individual', item.price_small || item.price)}
           >
             Agregar individual
           </button>
-          {item.priceLarge && (
+          {item.price_large && (
             <button
               type="button"
               className="rounded-full border border-gray-300 dark:border-white/20 bg-gray-100 dark:bg-white/10 px-4 py-3 text-sm font-semibold text-gray-700 dark:text-white transition-all duration-300 hover:bg-gray-200 dark:hover:bg-white/20 hover:scale-[1.02] active:scale-95 shadow-lg shadow-gray-500/30 dark:shadow-white/15"
-              onClick={() => handleAdd('Grande', item.priceLarge)}
+              onClick={() => handleAdd('Grande', item.price_large)}
             >
               Agregar grande
             </button>

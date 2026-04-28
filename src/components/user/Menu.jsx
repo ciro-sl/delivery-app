@@ -16,8 +16,20 @@ const Menu = () => {
 
   if (loading) {
     return (
-      <div className="flex justify-center items-center h-72">
+      <div className="flex flex-col justify-center items-center h-72 space-y-4">
         <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-amarillo" />
+        <p className="text-gray-600 dark:text-gray-400">Cargando menú...</p>
+      </div>
+    )
+  }
+
+  if (!menuItems || menuItems.length === 0) {
+    return (
+      <div className="flex flex-col justify-center items-center h-72 space-y-4">
+        <div className="text-gray-500 dark:text-gray-400">
+          <p className="text-lg">No hay productos disponibles</p>
+          <p className="text-sm mt-2">Intenta recargar la página o contacta al administrador</p>
+        </div>
       </div>
     )
   }

@@ -5,7 +5,7 @@ import { MenuContext } from '../../contexts/MenuContext'
 import { OrderContext } from '../../contexts/OrderContext'
 import { ThemeContext } from '../../contexts/ThemeContext'
 import AdminDashboard from './AdminDashboard'
-import MenuManagement from './MenuManagement'
+import MenuManagement from './MenuManagementEnhanced'
 import OrdersHistory from './OrdersHistory'
 import Sidebar from './Sidebar'
 
@@ -19,7 +19,7 @@ import Sidebar from './Sidebar'
 const AdminPanel = () => {
   // Contextos utilizados
   const { logout } = useContext(AuthContext)
-  const { menuItems, availableCategories, addMenuItem, updateMenuItem, deleteMenuItem } = useContext(MenuContext)
+  const { menuItems, availableCategories, addMenuItem, updateMenuItem, deleteMenuItem, addCategory } = useContext(MenuContext)
   const { orders, updateOrderStatus } = useContext(OrderContext)
   const { darkMode, toggleTheme } = useContext(ThemeContext)
 
@@ -79,6 +79,7 @@ const AdminPanel = () => {
               addMenuItem={addMenuItem}
               updateMenuItem={updateMenuItem}
               deleteMenuItem={deleteMenuItem}
+              addCategory={addCategory}
               darkMode={darkMode}
             />
           )}

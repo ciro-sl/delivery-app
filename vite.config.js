@@ -2,56 +2,50 @@ import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 
 // Configuración de Vite para la aplicación Delivery App
-// https://vite.dev/config/
 export default defineConfig({
-  // Plugins utilizados en el proyecto
-  plugins: [
-    react() // Plugin oficial de Vite para React - habilita JSX, Fast Refresh, etc.
-  ],
+  plugins: [react()],
 
-  // Configuración del servidor de desarrollo
   server: {
     // Puerto del servidor (por defecto 5173)
-    // host: 'localhost',
-    // port: 5173,
-
-    // Configuración de proxy para APIs (si se necesita)
-    // proxy: {
-    //   '/api': {
-    //     target: 'http://localhost:3000',
-    //     changeOrigin: true
-    //   }
-    // }
+    port: 5173,
+    // Proxy para conectar con el backend
+    proxy: {
+      '/api': {
+        target: 'http://localhost:3001',
+        changeOrigin: true
+      }
+    }
   },
 
-  // Configuración del build
   build: {
     // Directorio de salida del build
     outDir: 'dist',
-
-    // Configuración de sourcemaps para debugging
+    // Sourcemaps para debugging
     sourcemap: false,
-
-    // Configuración de chunks para optimización
+    // Configuración de chunks (CORREGIDO: ahora es función)
     rollupOptions: {
       output: {
-        // Separar vendor chunks para mejor caching
-        manualChunks: {
-          vendor: ['react', 'react-dom'],
-          router: ['react-router-dom']
+        manualChunks(id) {
+          // Separar React en su propio chunk
+          if (id.includes('node_modules')) {
+            if (id.includes('react') || id.includes('react-dom')) {
+              return 'vendor-react'
+            }
+            if (id.includes('react-router-dom')) {
+              return 'vendor-router'
+            }
+            // Otros vendor chunks
+            return 'vendor'
+          }
         }
       }
     }
   },
 
-  // Resolución de alias para imports más limpios
   resolve: {
     alias: {
-      // '@': path.resolve(__dirname, './src')
+      // Puedes añadir alias si los necesitas
+      // '@': '/src'
     }
-  },
-
-  // Variables de entorno
-  // Las variables que empiecen con VITE_ estarán disponibles en el cliente
-  // envPrefix: 'VITE_'
+  }
 })
