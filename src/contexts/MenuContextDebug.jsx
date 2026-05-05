@@ -156,10 +156,22 @@ export const MenuProvider = ({ children }) => {
       }
       
       const newItem = await response.json();
-      console.log('✅ MenuContext: Producto creado:', newItem);
-      
-      // Actualizar estado local
-      setMenuItems(prev => [...prev, { ...item, id: newItem.id.toString() }]);
+       console.log('✅ MenuContext: Producto creado:', newItem);
+        
+        // Actualizar estado local
+        setMenuItems(prev => [...prev, { 
+          ...item, 
+          id: newItem.id.toString(),
+          category: item.category_id ? 
+            (() => {
+              const map = { 1: 'pizzas', 2: 'bebidas', 3: 'combos', 4: 'postres' };
+              return map[item.category_id] || 'extras';
+            })()
+            : (item.category || 'extras'),
+          price_small: item.price_small || item.price,
+          price_large: item.price_large || null,
+          image: item.image || ''
+        }]);
     } catch (error) {
       console.error('❌ MenuContext: Error agregando producto:', error);
       throw error;
@@ -192,10 +204,28 @@ export const MenuProvider = ({ children }) => {
         throw new Error('Error al actualizar producto');
       }
       
-      console.log('✅ MenuContext: Producto actualizado');
-      
-      // Actualizar estado local
-      setMenuItems(prev => prev.map(i => i.id === id ? { ...item, id } : i));
+       console.log('✅ MenuContext: Producto actualizado');
+        
+        // Actualizar estado local - mergear correctamente los datos actualizados
+        // con los existentes para no perder campos como category, price, etc.
+        setMenuItems(prev => prev.map(i => 
+          i.id === id 
+            ? {
+                ...i,
+                name: item.name,
+                category: item.category_id ? 
+                  (() => {
+                    const map = { 1: 'pizzas', 2: 'bebidas', 3: 'combos', 4: 'postres' };
+                    return map[item.category_id] || i.category;
+                  })()
+                  : (item.category || i.category),
+                description: item.description,
+                price_small: item.price_small,
+                price_large: item.price_large,
+                image: item.image || i.image
+              }
+            : i
+        ));
     } catch (error) {
       console.error('❌ MenuContext: Error actualizando producto:', error);
       throw error;

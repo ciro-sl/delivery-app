@@ -1,5 +1,5 @@
 import { useContext, useMemo, useState } from 'react'
-import { MenuContext } from '../../contexts/MenuContext'
+import { MenuContext } from '../../contexts/MenuContextDebug'
 import MenuItem from './MenuItem'
 
 const Menu = () => {

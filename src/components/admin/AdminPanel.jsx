@@ -1,11 +1,11 @@
 import { useContext, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { AuthContext } from '../../contexts/AuthContext'
-import { MenuContext } from '../../contexts/MenuContext'
+import { MenuContext } from '../../contexts/MenuContextDebug'
 import { OrderContext } from '../../contexts/OrderContext'
 import { ThemeContext } from '../../contexts/ThemeContext'
 import AdminDashboard from './AdminDashboard'
-import MenuManagement from './MenuManagementEnhanced'
+import MenuManagementUltraEnhanced from './MenuManagementUltraEnhanced'
 import OrdersHistory from './OrdersHistory'
 import Sidebar from './Sidebar'
 
@@ -21,7 +21,7 @@ const AdminPanel = () => {
   const { logout } = useContext(AuthContext)
   const { menuItems, availableCategories, addMenuItem, updateMenuItem, deleteMenuItem, addCategory } = useContext(MenuContext)
   const { orders, updateOrderStatus } = useContext(OrderContext)
-  const { darkMode, toggleTheme } = useContext(ThemeContext)
+  const { darkMode } = useContext(ThemeContext)
 
   // Estado de la pestaña activa en el sidebar
   const [activeTab, setActiveTab] = useState('dashboard')
@@ -45,7 +45,7 @@ const AdminPanel = () => {
       <div className="flex min-h-screen">
         {/* Sidebar fijo a la izquierda con navegación */}
         <div className="w-64 flex-shrink-0 min-h-screen">
-          <Sidebar activeTab={activeTab} setActiveTab={setActiveTab} darkMode={darkMode} toggleDarkMode={toggleTheme} />
+          <Sidebar activeTab={activeTab} setActiveTab={setActiveTab} darkMode={darkMode} />
         </div>
 
         {/* Contenido principal desplazado para dejar espacio al sidebar */}
@@ -73,7 +73,7 @@ const AdminPanel = () => {
           {/* Renderizado condicional de secciones basado en activeTab */}
           {activeTab === 'dashboard' && <AdminDashboard orders={orders} darkMode={darkMode} />}
           {activeTab === 'menu' && (
-            <MenuManagement
+            <MenuManagementUltraEnhanced
               menuItems={menuItems}
               availableCategories={availableCategories}
               addMenuItem={addMenuItem}

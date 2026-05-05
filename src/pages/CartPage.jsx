@@ -12,19 +12,84 @@ const CartPage = () => {
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
   const [confirmationOrder, setConfirmationOrder] = useState(null)
+  const [fieldErrors, setFieldErrors] = useState({ name: '', phone: '', address: '' })
+
+  const validateField = (field, value) => {
+    const errors = { ...fieldErrors }
+    
+    switch (field) {
+      case 'name':
+        if (!value || value.trim().length === 0) {
+          errors.name = ''
+        } else if (value.trim().length < 3) {
+          errors.name = 'El nombre debe tener al menos 3 caracteres.'
+        } else if (!/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/.test(value.trim())) {
+          errors.name = 'El nombre solo puede contener letras y espacios.'
+        } else {
+          errors.name = ''
+        }
+        break
+        
+      case 'phone':
+        if (!value || value.trim().length === 0) {
+          errors.phone = ''
+        } else if (value.trim().length < 7) {
+          errors.phone = 'El teléfono debe tener al menos 7 dígitos.'
+        } else if (!/^[0-9\s\-()]+$/.test(value.trim())) {
+          errors.phone = 'El teléfono solo puede contener números, espacios, guiones y paréntesis.'
+        } else {
+          errors.phone = ''
+        }
+        break
+        
+      case 'address':
+        if (!value || value.trim().length === 0) {
+          errors.address = ''
+        } else if (value.trim().length < 10) {
+          errors.address = 'La dirección debe tener al menos 10 caracteres.'
+        } else {
+          errors.address = ''
+        }
+        break
+    }
+    
+    setFieldErrors(errors)
+  }
+
+  const validateForm = () => {
+    // Validar que el carrito no esté vacío
+    if (cart.length === 0) {
+      setError('El carrito está vacío. Agrega productos antes de confirmar.')
+      return false
+    }
+
+    // Validar todos los campos
+    validateField('name', customer.name)
+    validateField('phone', customer.phone)
+    validateField('address', customer.address)
+
+    // Verificar si hay errores
+    if (fieldErrors.name || fieldErrors.phone || fieldErrors.address) {
+      setError('Por favor corrige los errores en el formulario.')
+      return false
+    }
+
+    // Validar que todos los productos tengan cantidad válida
+    const invalidItems = cart.filter(item => item.quantity < 1)
+    if (invalidItems.length > 0) {
+      setError('Hay productos con cantidad inválida. Por favor revisa el carrito.')
+      return false
+    }
+
+    return true
+  }
 
   const handleSubmit = (event) => {
     event.preventDefault()
     setError('')
     setSuccess('')
 
-    if (cart.length === 0) {
-      setError('El carrito está vacío. Agrega productos antes de confirmar.')
-      return
-    }
-
-    if (!customer.name || !customer.phone || !customer.address) {
-      setError('Por favor completa todos los datos del cliente.')
+    if (!validateForm()) {
       return
     }
 
@@ -157,16 +222,20 @@ const CartPage = () => {
                   <div className="mt-5 flex flex-wrap items-center gap-3">
                     <button
                       type="button"
-                      className="rounded-full border border-gray-300 dark:border-white/10 bg-gradient-to-br from-gray-100 to-gray-200 dark:bg-white/5 px-4 py-2 text-sm text-black dark:text-white transition hover:bg-gray-300 dark:hover:bg-white/15 shadow-sm shadow-gray-200 dark:shadow-black/20"
+                      className="rounded-full border border-gray-300 dark:border-white/10 bg-gradient-to-br from-gray-100 to-gray-200 dark:bg-white/5 px-4 py-2 text-sm text-black dark:text-white transition hover:bg-gray-300 dark:hover:bg-white/15 shadow-sm shadow-gray-200 dark:shadow-black/20 disabled:opacity-50 disabled:cursor-not-allowed"
                       onClick={() => updateQuantity(item.cartKey, item.quantity - 1)}
+                      disabled={item.quantity <= 1}
+                      title={item.quantity <= 1 ? "La cantidad mínima es 1" : "Reducir cantidad"}
                     >
                       -
                     </button>
                     <span className="min-w-[2rem] text-center text-sm font-semibold text-black dark:text-white">{item.quantity}</span>
                     <button
                       type="button"
-                      className="rounded-full border border-gray-300 dark:border-white/10 bg-gradient-to-br from-gray-100 to-gray-200 dark:bg-white/5 px-4 py-2 text-sm text-black dark:text-white transition hover:bg-gray-300 dark:hover:bg-white/15 shadow-sm shadow-gray-200 dark:shadow-black/20"
+                      className="rounded-full border border-gray-300 dark:border-white/10 bg-gradient-to-br from-gray-100 to-gray-200 dark:bg-white/5 px-4 py-2 text-sm text-black dark:text-white transition hover:bg-gray-300 dark:hover:bg-white/15 shadow-sm shadow-gray-200 dark:shadow-black/20 disabled:opacity-50 disabled:cursor-not-allowed"
                       onClick={() => updateQuantity(item.cartKey, item.quantity + 1)}
+                      disabled={item.quantity >= 99}
+                      title={item.quantity >= 99 ? "La cantidad máxima es 99" : "Aumentar cantidad"}
                     >
                       +
                     </button>
@@ -186,28 +255,58 @@ const CartPage = () => {
               Nombre completo
               <input
                 value={customer.name}
-                onChange={(event) => setCustomer({ ...customer, name: event.target.value })}
-                className="mt-2 w-full rounded-3xl border border-gray-300 dark:border-white/10 bg-gradient-to-br from-white to-gray-50 dark:from-[#1f1f24] dark:to-[#121217] px-4 py-3 text-black dark:text-white outline-none transition focus:border-orange-400 shadow-sm shadow-gray-200 dark:shadow-black/20"
+                onChange={(event) => {
+                  setCustomer({ ...customer, name: event.target.value })
+                  validateField('name', event.target.value)
+                }}
+                className={`mt-2 w-full rounded-3xl border px-4 py-3 text-black dark:text-white outline-none transition shadow-sm ${
+                  fieldErrors.name 
+                    ? 'border-red-500 bg-red-50 dark:bg-red-900/20 focus:border-red-600' 
+                    : 'border-gray-300 dark:border-white/10 bg-gradient-to-br from-white to-gray-50 dark:from-[#1f1f24] dark:to-[#121217] focus:border-orange-400 shadow-gray-200 dark:shadow-black/20'
+                }`}
                 placeholder="Juan Pérez"
               />
+              {fieldErrors.name && (
+                <p className="mt-1 text-sm text-red-600 dark:text-red-400">{fieldErrors.name}</p>
+              )}
             </label>
             <label className="block text-sm font-semibold text-black dark:text-white">
               Teléfono
               <input
                 value={customer.phone}
-                onChange={(event) => setCustomer({ ...customer, phone: event.target.value })}
-                className="mt-2 w-full rounded-3xl border border-gray-300 dark:border-white/10 bg-gradient-to-br from-white to-gray-50 dark:from-[#1f1f24] dark:to-[#121217] px-4 py-3 text-black dark:text-white outline-none transition focus:border-orange-400 shadow-sm shadow-gray-200 dark:shadow-black/20"
+                onChange={(event) => {
+                  setCustomer({ ...customer, phone: event.target.value })
+                  validateField('phone', event.target.value)
+                }}
+                className={`mt-2 w-full rounded-3xl border px-4 py-3 text-black dark:text-white outline-none transition shadow-sm ${
+                  fieldErrors.phone 
+                    ? 'border-red-500 bg-red-50 dark:bg-red-900/20 focus:border-red-600' 
+                    : 'border-gray-300 dark:border-white/10 bg-gradient-to-br from-white to-gray-50 dark:from-[#1f1f24] dark:to-[#121217] focus:border-orange-400 shadow-gray-200 dark:shadow-black/20'
+                }`}
                 placeholder="300 123 4567"
               />
+              {fieldErrors.phone && (
+                <p className="mt-1 text-sm text-red-600 dark:text-red-400">{fieldErrors.phone}</p>
+              )}
             </label>
             <label className="block text-sm font-semibold text-black dark:text-white">
               Dirección de entrega
               <input
                 value={customer.address}
-                onChange={(event) => setCustomer({ ...customer, address: event.target.value })}
-                className="mt-2 w-full rounded-3xl border border-gray-300 dark:border-white/10 bg-gradient-to-br from-white to-gray-50 dark:from-[#1f1f24] dark:to-[#121217] px-4 py-3 text-black dark:text-white outline-none transition focus:border-orange-400 shadow-sm shadow-gray-200 dark:shadow-black/20"
+                onChange={(event) => {
+                  setCustomer({ ...customer, address: event.target.value })
+                  validateField('address', event.target.value)
+                }}
+                className={`mt-2 w-full rounded-3xl border px-4 py-3 text-black dark:text-white outline-none transition shadow-sm ${
+                  fieldErrors.address 
+                    ? 'border-red-500 bg-red-50 dark:bg-red-900/20 focus:border-red-600' 
+                    : 'border-gray-300 dark:border-white/10 bg-gradient-to-br from-white to-gray-50 dark:from-[#1f1f24] dark:to-[#121217] focus:border-orange-400 shadow-gray-200 dark:shadow-black/20'
+                }`}
                 placeholder="Calle 45 #12-34"
               />
+              {fieldErrors.address && (
+                <p className="mt-1 text-sm text-red-600 dark:text-red-400">{fieldErrors.address}</p>
+              )}
             </label>
             <label className="block text-sm font-semibold text-black dark:text-white">
               Método de pago
@@ -227,13 +326,24 @@ const CartPage = () => {
               <p className="text-sm text-gray-600 dark:text-texto-muted">Total estimado</p>
               <p className="mt-2 text-3xl font-bold text-amarillo">${getTotal().toLocaleString()}</p>
             </div>
-            <button type="submit" className="w-full rounded-full bg-gradient-to-r from-verde to-emerald-400 px-6 py-4 text-base font-bold uppercase text-white shadow-xl shadow-emerald-500/25 transition hover:scale-[1.01] hover:shadow-emerald-500/40">
-              Confirmar pedido
+            <button 
+              type="submit" 
+              className="w-full rounded-full bg-gradient-to-r from-verde to-emerald-400 px-6 py-4 text-base font-bold uppercase text-white shadow-xl shadow-emerald-500/25 transition hover:scale-[1.01] hover:shadow-emerald-500/40 disabled:opacity-50 disabled:cursor-not-allowed"
+              disabled={cart.length === 0}
+            >
+              {cart.length === 0 ? 'Carrito vacío' : 'Confirmar pedido'}
             </button>
             <button
               type="button"
-              onClick={clearCart}
-              className="w-full rounded-full bg-red-600 px-6 py-4 text-base font-bold uppercase text-white transition hover:bg-red-500"
+              onClick={() => {
+                if (cart.length > 0 && window.confirm('¿Estás seguro de que quieres vaciar el carrito?')) {
+                  clearCart()
+                  setError('')
+                  setSuccess('Carrito vaciado correctamente.')
+                }
+              }}
+              className="w-full rounded-full bg-red-600 px-6 py-4 text-base font-bold uppercase text-white transition hover:bg-red-500 disabled:opacity-50 disabled:cursor-not-allowed"
+              disabled={cart.length === 0}
             >
               Vaciar carrito
             </button>

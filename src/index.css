@@ -91,7 +91,7 @@ body {
 /* Estilos específicos del html y body */
 html {
   font-family: 'Inter', sans-serif; /* Fuente principal */
-  background: linear-gradient(rgba(189, 189, 189, 0.62), rgba(194, 191, 191, 0.62)), url('src/assets/blanco.png') center/cover fixed no-repeat;
+  background: linear-gradient(rgba(189, 189, 189, 0.62), rgba(255, 3, 3, 0.62)), url('src/assets/blanco.png') center/cover fixed no-repeat;
   background-color: var(--bg-body);
   color: var(--text-primary);
   transition: all 0.3s ease;

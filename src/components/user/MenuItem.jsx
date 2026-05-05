@@ -29,8 +29,8 @@ const MenuItem = ({ item }) => {
   };
 
   return (
-    <article className="group rounded-2xl border border-gray-300 dark:border-white/20 bg-white dark:bg-[#111111] p-6 transition-all duration-300 hover:-translate-y-1 backdrop-blur-sm shadow-[0_10px_25px_-5px_rgba(0,0,0,0.3),0_8px_10px_-6px_rgba(0,0,0,0.2)] dark:shadow-[0_15px_55px_-5px_rgba(255,255,255,0.15),0_8px_10px_-6px_rgba(255,255,255,0.1)]">
-      <div className="mb-5 overflow-hidden rounded-xl bg-gray-100 dark:bg-[#181818]">
+    <article className="group rounded-2xl border border-[#e0e0e0] dark:border-white/20 bg-white dark:bg-[#111111] p-6 transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_8px_25px_rgba(0,0,0,0.12)] shadow-[0_2px_8px_rgba(0,0,0,0.08)] dark:shadow-[0_15px_55px_-5px_rgba(255,255,255,0.15),0_8px_10px_-6px_rgba(255,255,255,0.1)]">
+      <div className="mb-5 overflow-hidden rounded-xl bg-[#f9f9f9] dark:bg-[#181818] border border-[#e0e0e0] dark:border-transparent">
         <img
           src={item.image || 'https://via.placeholder.com/400x280?text=Pa+Que+Arvey'}
           alt={item.name}
@@ -40,15 +40,15 @@ const MenuItem = ({ item }) => {
 
       <div className="space-y-4">
         <div className="space-y-3">
-          <div className="flex flex-wrap items-center gap-3 text-sm text-gray-600 dark:text-white/70">
-            <span className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-amarillo/15 text-amarillo">
+          <div className="flex flex-wrap items-center gap-3 text-sm text-gray-700 dark:text-white/70">
+            <span className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-[#fef3e8] dark:bg-amarillo/15 text-amber-600 dark:text-amarillo border border-[#f0e68c] dark:border-transparent">
               {categoryIcons[item.category] ?? '✨'}
             </span>
-            <span className="font-semibold uppercase tracking-[0.2em] text-gray-500 dark:text-white/60">
+            <span className="font-semibold uppercase tracking-[0.2em] text-gray-600 dark:text-white/60">
               {item.category}
             </span>
           </div>
-          <h3 className="text-2xl font-bold text-black dark:text-white">{item.name}</h3>
+          <h3 className="text-2xl font-bold text-gray-900 dark:text-white">{item.name}</h3>
           <p className="text-sm leading-6 text-gray-600 dark:text-gray-400">
             {item.description}
           </p>
@@ -57,24 +57,24 @@ const MenuItem = ({ item }) => {
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
             <p className="text-sm text-gray-600 dark:text-gray-400">Precio</p>
-            <p className="text-3xl font-bold text-amarillo">
+            <p className="text-3xl font-bold text-[#e67e22] dark:text-amarillo">
               ${(item.price_small || item.price).toLocaleString()}
             </p>
           </div>
-          <div className="flex items-center gap-3 rounded-full bg-gray-100 dark:bg-white/10 px-3 py-2 text-sm text-black dark:text-white shadow-md shadow-gray-400/50 dark:shadow-white/10">
+          <div className="flex items-center gap-3 rounded-full bg-[#f8f9fa] dark:bg-white/10 px-3 py-2 text-sm text-gray-700 dark:text-white border border-[#e0e0e0] dark:border-transparent shadow-[0_2px_8px_rgba(0,0,0,0.08)]">
             <button
               type="button"
-              className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-gray-200 dark:bg-white/15 transition-all hover:bg-gray-300 dark:hover:bg-white/25"
+              className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-gray-200 dark:bg-white/15 transition-all hover:bg-gray-300 dark:hover:bg-white/25 border border-[#e0e0e0] dark:border-transparent shadow-[0_2px_8px_rgba(0,0,0,0.08)]"
               onClick={() => setQuantity(Math.max(1, quantity - 1))}
             >
               -
             </button>
-            <span className="min-w-[1.6rem] text-center text-sm font-semibold">
+            <span className="min-w-[1.6rem] text-center text-sm font-semibold text-gray-700 dark:text-white">
               {quantity}
             </span>
             <button
               type="button"
-              className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-gray-200 dark:bg-white/15 transition-all hover:bg-gray-300 dark:hover:bg-white/25"
+              className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-gray-200 dark:bg-white/15 transition-all hover:bg-gray-300 dark:hover:bg-white/25 border border-[#e0e0e0] dark:border-transparent shadow-[0_2px_8px_rgba(0,0,0,0.08)]"
               onClick={() => setQuantity(quantity + 1)}
             >
               +
@@ -85,7 +85,7 @@ const MenuItem = ({ item }) => {
         <div className="grid gap-3 sm:grid-cols-2">
           <button
             type="button"
-            className="rounded-full bg-gradient-to-r from-verde to-emerald-400 px-4 py-3 text-sm font-semibold text-white transition-all duration-300 hover:from-emerald-500 hover:to-lime-400 hover:scale-[1.02] active:scale-95 shadow-lg shadow-emerald-700/40 dark:shadow-emerald-500/30"
+            className="rounded-full bg-gradient-to-r from-verde to-emerald-400 px-4 py-3 text-sm font-semibold text-white transition-all duration-300 hover:from-emerald-500 hover:to-lime-400 hover:scale-[1.02] active:scale-95 shadow-lg shadow-emerald-700/40 dark:shadow-emerald-500/30 border border-transparent hover:border-emerald-400/30"
             onClick={() => handleAdd('Individual', item.price_small || item.price)}
           >
             Agregar individual
@@ -93,7 +93,7 @@ const MenuItem = ({ item }) => {
           {item.price_large && (
             <button
               type="button"
-              className="rounded-full border border-gray-300 dark:border-white/20 bg-gray-100 dark:bg-white/10 px-4 py-3 text-sm font-semibold text-gray-700 dark:text-white transition-all duration-300 hover:bg-gray-200 dark:hover:bg-white/20 hover:scale-[1.02] active:scale-95 shadow-lg shadow-gray-500/30 dark:shadow-white/15"
+              className="rounded-full border border-[#e0e0e0] dark:border-white/20 bg-gray-100 dark:bg-white/10 px-4 py-3 text-sm font-semibold text-gray-700 dark:text-white transition-all duration-300 hover:bg-gray-200 dark:hover:bg-white/20 hover:scale-[1.02] active:scale-95 shadow-lg shadow-[0_2px_8px_rgba(0,0,0,0.08)] dark:shadow-white/15"
               onClick={() => handleAdd('Grande', item.price_large)}
             >
               Agregar grande

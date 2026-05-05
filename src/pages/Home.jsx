@@ -48,12 +48,12 @@ const Home = () => {
 
       {/* Sección del menú destacado con su título y el componente Menu. */}
       <section className="container mx-auto px-4 py-14">
-        <div className="mb-8 flex flex-wrap items-center justify-between gap-4">
+        <div className="mb-12 flex flex-wrap items-center justify-between gap-4 border-b border-[#e0e0e0] pb-8">
           <div>
             {/* Subtítulo de sección que introduce el menú destacado. */}
-            <p className="text-sm uppercase tracking-[0.3em] text-naranja">Menú destacado</p>
+            <p className=" px-2 py-8 mb-1   flex flex-wraptext-sm uppercase tracking-[0.5em] text-[#e67e22] font-semibold">Menú destacado</p>
             {/* Título que indica que el usuario puede elegir sus productos favoritos. */}
-            <h2 className="text-3xl font-bold text-gris-oscuro">Elija sus favoritos</h2>
+            <h2 className="text-4xl font-bold text-blanco-900">Elija sus favoritos</h2>
           </div>
         </div>
         {/* Renderizar el componente del menú con todos los productos disponibles. */}
