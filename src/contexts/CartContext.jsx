@@ -52,28 +52,28 @@ export const CartProvider = ({ children }) => {
   }
 
   /**
-   * Remueve completamente un item del carrito por su ID.
+   * Remueve completamente un item del carrito por su cartKey.
    *
-   * @param {string} id - ID del item a remover
+   * @param {string} cartKey - CartKey del item a remover
    */
-  const removeFromCart = (id) => {
-    setCart(prev => prev.filter(item => item.id !== id))
+  const removeFromCart = (cartKey) => {
+    setCart(prev => prev.filter(item => item.cartKey !== cartKey))
   }
 
   /**
    * Actualiza la cantidad de un item en el carrito.
    * Si la cantidad es <= 0, remueve el item.
    *
-   * @param {string} id - ID del item a actualizar
+   * @param {string} cartKey - CartKey del item a actualizar
    * @param {number} quantity - Nueva cantidad
    */
-  const updateQuantity = (id, quantity) => {
+  const updateQuantity = (cartKey, quantity) => {
     if (quantity <= 0) {
-      removeFromCart(id)
+      removeFromCart(cartKey)
       return
     }
     setCart(prev => prev.map(item =>
-      item.id === id ? { ...item, quantity } : item
+      item.cartKey === cartKey ? { ...item, quantity } : item
     ))
   }
 
@@ -88,7 +88,7 @@ export const CartProvider = ({ children }) => {
    * @returns {number} Total del carrito
    */
   const getTotal = () => {
-    return cart.reduce((total, item) => total + (item.price * item.quantity), 0)
+    return cart.reduce((total, item) => total + ((item.selectedPrice || item.price) * item.quantity), 0)
   }
 
   /**

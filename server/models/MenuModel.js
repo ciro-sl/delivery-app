@@ -28,15 +28,17 @@ class MenuModel {
   // Crear nuevo item
   static create(item) {
     const stmt = db.prepare(`
-      INSERT INTO menu_items (name, category_id, price_small, price_large, description, popular, available)
-      VALUES (?, ?, ?, ?, ?, ?, ?)
+      INSERT INTO menu_items (name, category_id, price_small, price_medium, price_large, description, image, popular, available)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
     `);
     const result = stmt.run(
-      item.name, 
-      item.category_id, 
-      item.price_small || null, 
-      item.price_large || null, 
-      item.description, 
+      item.name,
+      item.category_id,
+      item.price_small || null,
+      item.price_medium || null,
+      item.price_large || null,
+      item.description,
+      item.image || null,
       item.popular ? 1 : 0,
       item.available !== undefined ? (item.available ? 1 : 0) : 1
     );
@@ -45,23 +47,47 @@ class MenuModel {
 
   // Actualizar item
   static update(id, item) {
+    console.log('MenuModel.update - ID:', id, 'Datos:', item);
+
+    // Validar que el ID existe
+    const existingItem = this.getById(id);
+    if (!existingItem) {
+      throw new Error('Producto no encontrado');
+    }
+
+    // Construir consulta dinámica basada en qué campos actualizar
+    let setClause = 'name = ?, category_id = ?, price_small = ?, price_medium = ?, price_large = ?, description = ?, popular = ?, available = ?';
+    let params = [
+      item.name || '',
+      parseInt(item.category_id) || 1,
+      item.price_small !== undefined && item.price_small !== null && item.price_small !== 'null' ? parseFloat(item.price_small) : null,
+      item.price_medium !== undefined && item.price_medium !== null && item.price_medium !== 'null' ? parseFloat(item.price_medium) : null,
+      item.price_large !== undefined && item.price_large !== null && item.price_large !== 'null' ? parseFloat(item.price_large) : null,
+      item.description || '',
+      item.popular ? 1 : 0,
+      item.available !== undefined ? (item.available ? 1 : 0) : 1,
+    ];
+
+    // Solo actualizar imagen si se proporciona
+    if (item.image !== undefined && item.image !== null) {
+      setClause += ', image = ?';
+      params.push(item.image);
+    }
+
     const stmt = db.prepare(`
-      UPDATE menu_items 
-      SET name = ?, category_id = ?, price_small = ?, price_large = ?, 
-          description = ?, popular = ?, available = ?
+      UPDATE menu_items
+      SET ${setClause}
       WHERE id = ?
     `);
-    stmt.run(
-      item.name, 
-      item.category_id, 
-      item.price_small || null, 
-      item.price_large || null, 
-      item.description, 
-      item.popular ? 1 : 0,
-      item.available ? 1 : 0,
-      id
-    );
-    return this.getById(id);
+
+    params.push(id);
+
+    console.log('Ejecutando update con datos:', params);
+
+    stmt.run(...params);
+    const updatedItem = this.getById(id);
+    console.log('Producto actualizado en BD:', updatedItem);
+    return updatedItem;
   }
 
   // Eliminar item (borrado lógico)
@@ -103,10 +129,29 @@ class MenuModel {
     return db.prepare('SELECT * FROM categories WHERE id = ?').get(id);
   }
 
-  // Eliminar categoría
+  // Verificar productos en categoría
+  static getProductsInCategory(categoryId) {
+    const stmt = db.prepare(`
+      SELECT id, name FROM menu_items
+      WHERE category_id = ? AND available = 1
+    `);
+    return stmt.all(categoryId);
+  }
+
+  // Eliminar categoría y todos sus productos
   static deleteCategory(id) {
-    const stmt = db.prepare('DELETE FROM categories WHERE id = ?');
-    return stmt.run(id);
+    // Primero eliminar todos los productos de esta categoría
+    const deleteProductsStmt = db.prepare('DELETE FROM menu_items WHERE category_id = ?');
+    const productsDeleted = deleteProductsStmt.run(id);
+
+    // Luego eliminar la categoría
+    const deleteCategoryStmt = db.prepare('DELETE FROM categories WHERE id = ?');
+    const categoryDeleted = deleteCategoryStmt.run(id);
+
+    return {
+      categoryDeleted: categoryDeleted.changes,
+      productsDeleted: productsDeleted.changes
+    };
   }
 }
 

@@ -4,6 +4,7 @@ import { AuthContext } from '../../contexts/AuthContext'
 import axios from 'axios'
 
 const AdminLogin = () => {
+  const [username, setUsername] = useState('admin')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
@@ -17,11 +18,11 @@ const AdminLogin = () => {
     setError('')
 
     try {
-      const res = await axios.post('http://localhost:3001/api/auth/login', { password })
+      const res = await axios.post('http://localhost:3001/api/auth/login', { username, password })
       login(res.data.token)
       navigate('/admin')
     } catch (err) {
-      setError(err.response?.data?.message || 'Contraseña incorrecta')
+      setError(err.response?.data?.message || 'Usuario o contraseña incorrectos')
     } finally {
       setLoading(false)
     }
@@ -49,6 +50,18 @@ const AdminLogin = () => {
           </div>
 
           <form onSubmit={handleSubmit} className="relative z-10 space-y-5">
+            <div>
+              <label className="block text-sm font-medium text-texto-muted mb-2">
+                Usuario
+              </label>
+              <input
+                type="text"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+                className="w-full px-4 py-3 bg-negro/50 border border-vinotinto/30 rounded-xl text-texto transition-all duration-300 focus:outline-none focus:border-naranja focus:ring-2 focus:ring-naranja/30 focus:shadow-[0_0_20px_rgba(255,127,17,0.2)] hover:border-naranja/50"
+                placeholder="admin"
+               />
+            </div>
             <div className={`relative transition-all duration-300 ${focused ? 'scale-[1.02]' : ''}`}>
               <label className="block text-sm font-medium text-texto-muted mb-2">
                 Contraseña
@@ -63,7 +76,7 @@ const AdminLogin = () => {
                 placeholder="••••••••"
                 autoFocus
                />
-             </div>
+              </div>
 
             {error && (
               <div className="p-3 bg-red-500/10 border border-red-500/30 rounded-xl text-red-400 text-center text-sm animate-shake">

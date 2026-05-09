@@ -174,6 +174,7 @@ const MenuManagementFixed = ({ menuItems, availableCategories = [], addMenuItem,
                     placeholder="Nombre de categoría"
                     value={categoryInput}
                     onChange={(e) => setCategoryInput(e.target.value)}
+                    maxLength="50"
                     className={`w-full p-2 border rounded ${darkMode ? 'bg-gray-700 border-gray-600' : 'bg-white border-gray-300'}`}
                   />
                   <div className="flex gap-2 mt-4">
@@ -198,6 +199,7 @@ const MenuManagementFixed = ({ menuItems, availableCategories = [], addMenuItem,
                     placeholder="Nombre del producto"
                     value={formData.name}
                     onChange={(e) => setFormData({...formData, name: e.target.value})}
+                    maxLength="30"
                     className={`w-full p-2 border rounded mb-2 ${darkMode ? 'bg-gray-700 border-gray-600' : 'bg-white border-gray-300'}`}
                   />
                   <input
@@ -205,12 +207,14 @@ const MenuManagementFixed = ({ menuItems, availableCategories = [], addMenuItem,
                     placeholder="Precio"
                     value={formData.price}
                     onChange={(e) => setFormData({...formData, price: e.target.value})}
+                    maxLength="10"
                     className={`w-full p-2 border rounded mb-2 ${darkMode ? 'bg-gray-700 border-gray-600' : 'bg-white border-gray-300'}`}
                   />
                   <textarea
                     placeholder="Descripción"
                     value={formData.description}
                     onChange={(e) => setFormData({...formData, description: e.target.value})}
+                    maxLength="40"
                     className={`w-full p-2 border rounded mb-2 ${darkMode ? 'bg-gray-700 border-gray-600' : 'bg-white border-gray-300'}`}
                   />
                   <div className="flex gap-2">
@@ -316,6 +320,7 @@ const MenuManagementFixed = ({ menuItems, availableCategories = [], addMenuItem,
                   placeholder="Nombre de categoría"
                   value={categoryInput}
                   onChange={(e) => setCategoryInput(e.target.value)}
+                  maxLength="50"
                   className={`w-full p-2 border rounded ${darkMode ? 'bg-gray-700 border-gray-600' : 'bg-white border-gray-300'}`}
                 />
                 <div className="flex gap-2 mt-4">
@@ -340,6 +345,7 @@ const MenuManagementFixed = ({ menuItems, availableCategories = [], addMenuItem,
                   placeholder="Nombre del producto"
                   value={formData.name}
                   onChange={(e) => setFormData({...formData, name: e.target.value})}
+                  maxLength="30"
                   className={`w-full p-2 border rounded mb-2 ${darkMode ? 'bg-gray-700 border-gray-600' : 'bg-white border-gray-300'}`}
                 />
                 <input
@@ -347,12 +353,14 @@ const MenuManagementFixed = ({ menuItems, availableCategories = [], addMenuItem,
                   placeholder="Precio"
                   value={formData.price}
                   onChange={(e) => setFormData({...formData, price: e.target.value})}
+                  maxLength="10"
                   className={`w-full p-2 border rounded mb-2 ${darkMode ? 'bg-gray-700 border-gray-600' : 'bg-white border-gray-300'}`}
                 />
                 <textarea
                   placeholder="Descripción"
                   value={formData.description}
                   onChange={(e) => setFormData({...formData, description: e.target.value})}
+                  maxLength="40"
                   className={`w-full p-2 border rounded mb-2 ${darkMode ? 'bg-gray-700 border-gray-600' : 'bg-white border-gray-300'}`}
                 />
                 <div className="flex gap-2">

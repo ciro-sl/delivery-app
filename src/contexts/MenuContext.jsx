@@ -124,37 +124,19 @@ export const MenuProvider = ({ children }) => {
   )
 
   /**
-   * Agrega un nuevo item al menú usando la API.
-   *
-   * @param {Object} item - Nuevo item del menú
-   * @param {string} item.name - Nombre del item
-   * @param {string} item.category_id - ID de la categoría
-   * @param {string} item.description - Descripción del item
-   * @param {number} item.price_small - Precio pequeño
-   * @param {number} item.price_large - Precio grande
-   * @param {string} item.image - URL de la imagen
-   */
+    * Agrega un nuevo item al menú usando la API.
+    *
+    * @param {Object} item - Nuevo item del menú
+    * @param {string} item.name - Nombre del item
+    * @param {string} item.category_id - ID de la categoría
+    * @param {string} item.description - Descripción del item
+    * @param {number} item.price_small - Precio pequeño
+    * @param {number} item.price_large - Precio grande
+    * @param {File} item.imageFile - Archivo de imagen (opcional)
+    */
   const addMenuItem = async (item) => {
     try {
-      // Preparar datos para la API
-      const apiItem = {
-        name: item.name,
-        category_id: item.category_id,
-        price_small: item.price_small || item.price,
-        price_large: item.price_large || null,
-        description: item.description,
-        popular: item.popular || 0,
-        available: item.available !== undefined ? item.available : 1
-      }
-
-      // Llamar a la API
-      const newItem = await fetch('http://localhost:3001/api/menu', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(apiItem)
-      }).then(res => res.json())
+      const newItem = await menuService.createMenuItem(item);
 
       // Actualizar estado local
       setMenuItems(prev => [...prev, {
@@ -166,7 +148,7 @@ export const MenuProvider = ({ children }) => {
         price_large: newItem.price_large,
         popular: newItem.popular === 1,
         available: newItem.available === 1,
-        image: item.image || '/default-food.jpg'
+        image: newItem.image
       }])
 
       return newItem
@@ -177,36 +159,19 @@ export const MenuProvider = ({ children }) => {
   }
 
   /**
-   * Actualiza un item existente del menú usando la API.
-   *
-   * @param {string} id - ID del item a actualizar
-   * @param {Object} updatedItem - Propiedades actualizadas del item
-   */
+    * Actualiza un item existente del menú usando la API.
+    *
+    * @param {string} id - ID del item a actualizar
+    * @param {Object} updatedItem - Propiedades actualizadas del item
+    * @param {File} updatedItem.imageFile - Archivo de imagen (opcional)
+    */
   const updateMenuItem = async (id, updatedItem) => {
     try {
-      // Preparar datos para la API
-      const apiItem = {
-        name: updatedItem.name,
-        category_id: updatedItem.category_id,
-        price_small: updatedItem.price_small || updatedItem.price,
-        price_large: updatedItem.price_large || null,
-        description: updatedItem.description,
-        popular: updatedItem.popular || 0,
-        available: updatedItem.available !== undefined ? updatedItem.available : 1
-      }
-
-      // Llamar a la API
-      const updated = await fetch(`http://localhost:3001/api/menu/${id}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(apiItem)
-      }).then(res => res.json())
+      const updated = await menuService.updateMenuItem(id, updatedItem);
 
       // Actualizar estado local
-      setMenuItems(prev => prev.map(item => 
-        item.id === id 
+      setMenuItems(prev => prev.map(item =>
+        item.id === id
           ? {
               ...item,
               name: updated.name,
@@ -216,7 +181,7 @@ export const MenuProvider = ({ children }) => {
               price_large: updated.price_large,
               popular: updated.popular === 1,
               available: updated.available === 1,
-              image: updatedItem.image || item.image
+              image: updated.image
             }
           : item
       ))
@@ -229,16 +194,13 @@ export const MenuProvider = ({ children }) => {
   }
 
   /**
-   * Elimina un item del menú por su ID usando la API.
-   *
-   * @param {string} id - ID del item a eliminar
-   */
+    * Elimina un item del menú por su ID usando la API.
+    *
+    * @param {string} id - ID del item a eliminar
+    */
   const deleteMenuItem = async (id) => {
     try {
-      // Llamar a la API (borrado lógico)
-      await fetch(`http://localhost:3001/api/menu/${id}`, {
-        method: 'DELETE'
-      })
+      await menuService.deleteMenuItem(id);
 
       // Actualizar estado local
       setMenuItems(prev => prev.filter(item => item.id !== id))
@@ -249,24 +211,18 @@ export const MenuProvider = ({ children }) => {
   }
 
   /**
-   * Crea una nueva categoría usando la API.
-   *
-   * @param {Object} category - Nueva categoría
-   * @param {string} category.name - Nombre de la categoría
-   * @param {number} category.display_order - Orden de visualización
-   */
+    * Crea una nueva categoría usando la API.
+    *
+    * @param {Object} category - Nueva categoría
+    * @param {string} category.name - Nombre de la categoría
+    * @param {number} category.display_order - Orden de visualización
+    */
   const addCategory = async (category) => {
     try {
-      const newCategory = await fetch('http://localhost:3001/api/menu/categories', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(category)
-      }).then(res => res.json())
+      const newCategory = await menuService.createCategory(category);
 
       // Actualizar estado local
-      setCategories(prev => [...prev, newCategory.name.toLowerCase()])
+      setCategories(prev => [...prev, newCategory])
       return newCategory
     } catch (error) {
       console.error('Error agregando categoría:', error)
@@ -274,15 +230,49 @@ export const MenuProvider = ({ children }) => {
     }
   }
 
+  /**
+    * Elimina una categoría usando la API.
+    *
+    * @param {string} id - ID de la categoría a eliminar
+    */
+  const deleteCategory = async (id) => {
+    try {
+      const result = await menuService.deleteCategory(id);
+
+      // Actualizar estado local - remover categoría eliminada
+      setCategories(prev => prev.filter(cat => cat.id !== parseInt(id)))
+      return result
+    } catch (error) {
+      console.error('Error eliminando categoría:', error)
+      throw error
+    }
+  }
+
+  /**
+    * Obtiene productos de una categoría específica.
+    *
+    * @param {string} categoryId - ID de la categoría
+    */
+  const getProductsInCategory = async (categoryId) => {
+    try {
+      return await menuService.getProductsInCategory(categoryId);
+    } catch (error) {
+      console.error('Error obteniendo productos de categoría:', error)
+      throw error
+    }
+  }
+
   return (
     <MenuContext.Provider
-      value={{ 
-        menuItems, 
-        availableCategories, 
-        addMenuItem, 
-        updateMenuItem, 
+      value={{
+        menuItems,
+        availableCategories,
+        addMenuItem,
+        updateMenuItem,
         deleteMenuItem,
         addCategory,
+        deleteCategory,
+        getProductsInCategory,
         loading
       }}
     >

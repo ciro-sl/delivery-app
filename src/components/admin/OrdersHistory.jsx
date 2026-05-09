@@ -12,12 +12,13 @@ const OrdersHistory = ({ orders, darkMode, updateOrderStatus }) => {
     ? 'rounded-3xl bg-[#161616] p-4'
     : 'rounded-3xl bg-gradient-to-br from-gray-50 to-blue-50 p-4'
 
-  const statusOptions = ['En preparación', 'Preparando', 'Entregado', 'Cancelado']
+  const statusOptions = ['Preparando', 'Entregando', 'Entregado', 'Cancelado']
 
   const getStatusBadge = (status) => {
     const statusStyles = {
+      'Preparando': darkMode ? 'bg-amarillo/20 text-amarillo border-amarillo/30' : 'bg-yellow-100 text-yellow-700 border-yellow-200',
       'En preparación': darkMode ? 'bg-amarillo/20 text-amarillo border-amarillo/30' : 'bg-yellow-100 text-yellow-700 border-yellow-200',
-      'Preparando': darkMode ? 'bg-naranja/20 text-naranja border-naranja/30' : 'bg-orange-100 text-orange-700 border-orange-200',
+      'Entregando': darkMode ? 'bg-naranja/20 text-naranja border-naranja/30' : 'bg-orange-100 text-orange-700 border-orange-200',
       'Entregado': darkMode ? 'bg-verde/20 text-verde border-verde/30' : 'bg-green-100 text-green-700 border-green-200',
       'Cancelado': darkMode ? 'bg-red-600/15 text-red-400 border-red-400/30' : 'bg-red-100 text-red-700 border-red-200',
     }
@@ -40,10 +41,10 @@ const OrdersHistory = ({ orders, darkMode, updateOrderStatus }) => {
               <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                 <div>
                   <p className={`text-lg font-semibold ${textMain}`}>Pedido #{order.id}</p>
-                  <p className={`text-sm ${textMuted}`}>{new Date(order.date).toLocaleString()}</p>
+                  <p className={`text-sm ${textMuted}`}>{new Date(order.created_at).toLocaleString()}</p>
                 </div>
                 <div className="flex flex-col items-end gap-2">
-                  <p className="text-xl font-bold text-amarillo">${order.total.toLocaleString()}</p>
+                  <p className="text-xl font-bold text-amarillo">${order.total_amount.toLocaleString()}</p>
                   <span className={`inline-flex rounded-full border px-3 py-1 text-xs font-semibold ${getStatusBadge(order.status)}`}> 
                     {order.status}
                   </span>
@@ -53,18 +54,18 @@ const OrdersHistory = ({ orders, darkMode, updateOrderStatus }) => {
               <div className="mt-5 grid gap-4 sm:grid-cols-2">
                 <div className={innerCardClass}>
                   <p className={`text-sm uppercase tracking-[0.35em] ${textMuted}`}>Cliente</p>
-                  <p className={`mt-2 ${textMain}`}>{order.customer.name}</p>
-                  <p className={textMuted}>{order.customer.phone}</p>
-                  <p className={textMuted}>{order.customer.address}</p>
+                  <p className={`mt-2 ${textMain}`}>{order.customer_name}</p>
+                  <p className={textMuted}>{order.customer_phone}</p>
+                  <p className={textMuted}>{order.customer_address}</p>
                 </div>
                 <div className={innerCardClass}>
                   <p className={`text-sm uppercase tracking-[0.35em] ${textMuted}`}>Pago</p>
-                  <p className={`mt-2 ${textMain}`}>{order.paymentMethod}</p>
+                  <p className={`mt-2 ${textMain}`}>{order.payment_method}</p>
                   <p className={`mt-4 text-sm uppercase tracking-[0.35em] ${textMuted}`}>Productos</p>
                   <ul className={`mt-2 space-y-2 ${textMuted}`}>
                     {order.items.map((item, index) => (
                       <li key={index}>
-                        {item.name} x{item.quantity} • ${item.price.toLocaleString()} {item.variant ? `(${item.variant})` : ''}
+                        {item.item_name} x{item.quantity} • ${item.unit_price.toLocaleString()} {item.size ? `(${item.size})` : ''}
                       </li>
                     ))}
                   </ul>
@@ -73,7 +74,14 @@ const OrdersHistory = ({ orders, darkMode, updateOrderStatus }) => {
                   <p className={`text-sm uppercase tracking-[0.35em] ${textMuted}`}>Actualizar estado</p>
                   <select
                     value={order.status}
-                    onChange={(event) => updateOrderStatus(order.id, event.target.value)}
+                    onChange={async (event) => {
+                      try {
+                        await updateOrderStatus(order.id, event.target.value)
+                      } catch (error) {
+                        console.error('Error updating order status:', error)
+                        // Could show an error message here
+                      }
+                    }}
                     className={`mt-3 w-full rounded-3xl border px-4 py-3 ${darkMode ? 'border-white/10 bg-[#141414] text-white' : 'border-gray-200 bg-white text-gray-900'} focus:border-naranja focus:ring-naranja/20`}
                   >
                     {statusOptions.map((status) => (

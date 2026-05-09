@@ -1,4 +1,5 @@
-import { createContext, useState } from 'react'
+import { createContext, useState, useEffect } from 'react'
+import axios from 'axios'
 
 /**
  * Contexto de pedidos de la aplicación.
@@ -17,43 +18,84 @@ export const OrderContext = createContext()
 export const OrderProvider = ({ children }) => {
   // Estado de todos los pedidos realizados
   const [orders, setOrders] = useState([])
+  const [loading, setLoading] = useState(true)
 
   /**
-   * Agrega un nuevo pedido a la lista de pedidos.
-   * Genera un ID único y timestamp automático.
+   * Carga los pedidos desde la base de datos
+   */
+  const loadOrders = async () => {
+    try {
+      const response = await axios.get('http://localhost:3001/api/orders')
+      setOrders(response.data)
+    } catch (error) {
+      console.error('Error al cargar pedidos:', error)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  // Cargar pedidos al montar el componente y configurar polling para actualizaciones
+  useEffect(() => {
+    loadOrders()
+
+    // Polling cada 5 segundos para actualizaciones en tiempo real
+    const interval = setInterval(() => {
+      loadOrders()
+    }, 5000)
+
+    return () => clearInterval(interval)
+  }, [])
+
+  /**
+   * Agrega un nuevo pedido al estado local.
+   * Usado internamente después de guardar en BD.
    *
    * @param {Object} order - Datos del pedido
-   * @param {Array} order.items - Items del pedido
-   * @param {number} order.total - Total del pedido
-   * @param {Object} order.customerInfo - Información del cliente
    */
   const addOrder = (order) => {
-    const newOrder = {
-      id: `o${Date.now()}`,
-      date: new Date(),
-      status: order.status || 'En preparación',
-      ...order,
-    }
-    setOrders((prev) => [...prev, newOrder])
-    return newOrder
+    setOrders((prev) => [...prev, order])
+    return order
   }
 
   /**
    * Actualiza el estado de un pedido existente.
-   * @param {string} orderId - ID del pedido
+   * @param {string|number} orderId - ID del pedido
    * @param {string} status - Nuevo estado
    */
-  const updateOrderStatus = (orderId, status) => {
-    setOrders((prev) => prev.map((order) => (order.id === orderId ? { ...order, status } : order)))
+  const updateOrderStatus = async (orderId, status) => {
+    try {
+      const response = await axios.patch(`http://localhost:3001/api/orders/${orderId}/status`, { status })
+      const updatedOrder = response.data
+
+      // Actualizar el estado local
+      setOrders((prev) => prev.map((order) => (order.id === orderId ? updatedOrder : order)))
+
+      return updatedOrder
+    } catch (error) {
+      console.error('Error al actualizar estado del pedido:', error)
+      throw error
+    }
   }
 
   /**
-   * Alias para addOrder - función para realizar un pedido.
-   * Mantiene compatibilidad con código existente.
-   *
+   * Realiza un pedido - guarda en la base de datos y actualiza el estado local.
    * @param {Object} order - Datos del pedido
    */
-  const placeOrder = (order) => addOrder(order)
+  const placeOrder = async (order) => {
+    try {
+      // Crear el pedido en la base de datos
+      const response = await axios.post('http://localhost:3001/api/orders', order)
+      const savedOrder = response.data
+
+      // Agregar al estado local también
+      addOrder(savedOrder)
+
+      return savedOrder
+    } catch (error) {
+      console.error('Error al crear pedido:', error)
+      throw error
+    }
+  }
 
   /**
    * Calcula estadísticas de ganancias de los pedidos.
@@ -77,7 +119,7 @@ export const OrderProvider = ({ children }) => {
   }
 
   return (
-    <OrderContext.Provider value={{ orders, addOrder, placeOrder, updateOrderStatus, getEarningsStats }}>
+    <OrderContext.Provider value={{ orders, loading, addOrder, placeOrder, updateOrderStatus, getEarningsStats }}>
       {children}
     </OrderContext.Provider>
   )

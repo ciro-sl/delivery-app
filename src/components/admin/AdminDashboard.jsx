@@ -40,7 +40,7 @@ const AdminDashboard = ({ orders, darkMode }) => {
           <div className='absolute inset-0 pointer-events-none bg-gradient-to-br from-verde/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity' />
           <p className={'relative text-sm uppercase tracking-[0.35em] ' + textMuted}>Ultimo pedido</p>
           <p className={'relative mt-4 text-lg font-medium ' + (darkMode ? 'text-white' : 'text-gray-900')}>
-            {latestOrders[0] ? new Date(latestOrders[0].date).toLocaleString('es-ES', {
+            {latestOrders[0] ? new Date(latestOrders[0].created_at).toLocaleString('es-ES', {
               day: 'numeric',
               month: 'short',
               hour: '2-digit',
@@ -92,7 +92,7 @@ const AdminDashboard = ({ orders, darkMode }) => {
                         Pedido #{order.id}
                       </p>
                       <p className={'text-xs ' + textMuted}>
-                        {new Date(order.date).toLocaleString('es-ES', {
+                        {new Date(order.created_at).toLocaleString('es-ES', {
                           day: 'numeric',
                           month: 'short',
                           year: 'numeric',
@@ -104,18 +104,18 @@ const AdminDashboard = ({ orders, darkMode }) => {
                   </div>
                   <div className='text-right'>
                     <p className='text-lg font-bold text-amarillo'>
-                      ${order.total.toLocaleString()}
+                      ${order.total_amount.toLocaleString()}
                     </p>
-                    <p className={'text-xs ' + textMuted}>{order.paymentMethod}</p>
+                    <p className={'text-xs ' + textMuted}>{order.payment_method}</p>
                   </div>
                 </div>
 
                 <div className={'mt-3 flex flex-wrap gap-2 text-xs ' + textMuted + ' border-t ' + (darkMode ? 'border-white/5 pt-3' : 'border-gray-200 pt-3')}>
                   <span className='inline-flex items-center gap-1'>
-                    <span>👤</span> {order.customer.name}
+                    <span>👤</span> {order.customer_name}
                   </span>
                   <span className='inline-flex items-center gap-1'>
-                    <span>📞</span> {order.customer.phone}
+                    <span>📞</span> {order.customer_phone}
                   </span>
                 </div>
               </div>

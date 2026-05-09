@@ -328,6 +328,7 @@ const MenuManagementEnhanced = ({ menuItems, availableCategories = [], addMenuIt
                   value={categoryInput}
                   onChange={(e) => setCategoryInput(e.target.value)}
                   placeholder='Ej. pizzas'
+                  maxLength="50"
                   className={inputClass}
                 />
                 <div className='flex justify-end gap-3'>
@@ -357,6 +358,7 @@ const MenuManagementEnhanced = ({ menuItems, availableCategories = [], addMenuIt
                       value={formData.name}
                       onChange={(e) => setFormData((prev) => ({ ...prev, name: e.target.value }))}
                       placeholder='Ej. Pizza Mexicana'
+                      maxLength="30"
                       className={inputClass}
                     />
                   </label>
@@ -383,6 +385,7 @@ const MenuManagementEnhanced = ({ menuItems, availableCategories = [], addMenuIt
                     onChange={(e) => setFormData((prev) => ({ ...prev, description: e.target.value }))}
                     rows='4'
                     placeholder='Descripción breve del producto'
+                    maxLength="40"
                     className={inputClass}
                   />
                 </label>
@@ -395,6 +398,7 @@ const MenuManagementEnhanced = ({ menuItems, availableCategories = [], addMenuIt
                       value={formData.price}
                       onChange={(e) => setFormData((prev) => ({ ...prev, price: e.target.value }))}
                       placeholder='0'
+                      maxLength="10"
                       className={inputClass}
                     />
                   </label>
@@ -405,6 +409,7 @@ const MenuManagementEnhanced = ({ menuItems, availableCategories = [], addMenuIt
                       value={formData.priceLarge}
                       onChange={(e) => setFormData((prev) => ({ ...prev, priceLarge: e.target.value }))}
                       placeholder='0'
+                      maxLength="10"
                       className={inputClass}
                     />
                   </label>
@@ -422,6 +427,7 @@ const MenuManagementEnhanced = ({ menuItems, availableCategories = [], addMenuIt
                       value={formData.imageUrl}
                       onChange={(e) => handleImageUrlChange(e.target.value)}
                       placeholder='https://...'
+                      maxLength="100"
                       className={inputClass}
                     />
                   </label>

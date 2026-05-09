@@ -21,6 +21,7 @@ const Navbar = () => {
 
         <div className="flex items-center gap-6 text-sm font-semibold text-black dark:text-white">
           <Link to="/" className="transition hover:text-naranja dark:hover:text-amarillo">Inicio</Link>
+          <Link to="/track" className="transition hover:text-naranja dark:hover:text-amarillo">Rastrear pedido</Link>
           <Link to="/cart" className="relative transition hover:text-naranja dark:hover:text-amarillo">
             Carrito
             {getItemCount() > 0 && (
@@ -37,9 +38,6 @@ const Navbar = () => {
           >
             <span className="text-lg">{darkMode ? '☀️' : '🌙'}</span>
           </button>
-          <Link to="/admin/login" className="rounded-full border border-gray-300 dark:border-white/10 bg-gray-100 dark:bg-white/5 px-4 py-2 transition hover:bg-gray-200 dark:hover:bg-white/10 shadow-sm">
-            Admin
-          </Link>
         </div>
       </div>
     </nav>

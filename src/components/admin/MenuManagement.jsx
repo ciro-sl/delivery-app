@@ -11,34 +11,61 @@
  * @param {boolean} props.darkMode - Estado del modo oscuro
  * @returns {React.ReactElement} Interfaz de gestión del menú
  */
-import { useMemo, useState } from 'react'
+import { useMemo, useState, useEffect } from 'react'
 
-const MenuManagement = ({ menuItems, availableCategories = [], addMenuItem, updateMenuItem, deleteMenuItem, addCategory, darkMode }) => {
+const MenuManagement = ({ 
+  menuItems = [], 
+  availableCategories = [], 
+  addMenuItem, 
+  updateMenuItem, 
+  deleteMenuItem, 
+  addCategory, 
+  darkMode 
+}) => {
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [modalType, setModalType] = useState('product')
   const [modalMode, setModalMode] = useState('create')
   const [editingItem, setEditingItem] = useState(null)
   const [categoryInput, setCategoryInput] = useState('')
   const [photoPreview, setPhotoPreview] = useState('')
-    const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState({
     name: '',
-    category: 'extras',
+    category: '',
     description: '',
     price: '',
     priceLarge: '',
     image: '',
-    imageUrl: '',
+    imageUrl: ''
   })
+  const [error, setError] = useState({ isOpen: false, message: '' })
 
-  const categoryList = useMemo(
-    () => [
-      ...new Set([
-        ...(availableCategories || []).filter((cat) => cat && cat.toLowerCase() !== 'todas'),
-        ...menuItems.map((item) => item.category.toLowerCase()),
-      ]),
-    ],
-    [availableCategories, menuItems],
-  )
+  // Corrección: Asegurar que categoryList siempre sea un array
+  const categoryList = useMemo(() => {
+    try {
+      const available = Array.isArray(availableCategories) ? availableCategories : []
+      const menuCats = Array.isArray(menuItems) ? menuItems.map((item) => item?.category).filter(Boolean) : []
+      
+      const allCats = [
+        ...new Set([
+          ...available.filter((cat) => cat && cat.toLowerCase() !== 'todas'),
+          ...menuCats
+        ]),
+      ]
+      
+      // Si no hay categorías, proporcionar una por defecto
+      return allCats.length > 0 ? allCats : ['extras']
+    } catch (error) {
+      console.error('Error al procesar categorías:', error)
+      return ['extras']
+    }
+  }, [availableCategories, menuItems])
+
+  // Corrección: Establecer categoría por defecto cuando categoryList cambie
+  useEffect(() => {
+    if (formData.category === '' && categoryList.length > 0) {
+      setFormData(prev => ({ ...prev, category: categoryList[0] }))
+    }
+  }, [categoryList, formData.category])
 
   const resetForm = () => {
     setEditingItem(null)
@@ -53,6 +80,7 @@ const MenuManagement = ({ menuItems, availableCategories = [], addMenuItem, upda
     })
     setPhotoPreview('')
     setCategoryInput('')
+    setError({ isOpen: false, message: '' })
   }
 
   const openProductModal = (mode, item = null) => {
@@ -61,10 +89,10 @@ const MenuManagement = ({ menuItems, availableCategories = [], addMenuItem, upda
     if (mode === 'edit' && item) {
       setEditingItem(item)
       setFormData({
-        name: item.name,
-        category: item.category,
+        name: item.name || '',
+        category: item.category || categoryList[0] || 'extras',
         description: item.description || '',
-        price: String(item.price),
+        price: String(item.price || ''),
         priceLarge: item.priceLarge ? String(item.priceLarge) : '',
         image: item.image || '',
         imageUrl: item.image || '',
@@ -91,15 +119,36 @@ const MenuManagement = ({ menuItems, availableCategories = [], addMenuItem, upda
   const handlePhotoChange = (event) => {
     const file = event.target.files?.[0]
     if (!file) return
+    
+    // Validar tamaño del archivo (ej: 5MB máximo)
+    if (file.size > 5 * 1024 * 1024) {
+      setError({ isOpen: true, message: 'La imagen no puede superar los 5MB' })
+      return
+    }
+    
+    // Validar tipo de archivo
+    if (!file.type.startsWith('image/')) {
+      setError({ isOpen: true, message: 'Solo se permiten archivos de imagen' })
+      return
+    }
+    
     const reader = new FileReader()
     reader.onloadend = () => {
       setPhotoPreview(reader.result)
       setFormData((prev) => ({ ...prev, image: reader.result, imageUrl: '' }))
     }
+    reader.onerror = () => {
+      setError({ isOpen: true, message: 'Error al leer el archivo' })
+    }
     reader.readAsDataURL(file)
   }
 
   const handleImageUrlChange = (value) => {
+    // Validación básica de URL
+    if (value && !value.match(/^https?:\/\/.+\..+/)) {
+      setError({ isOpen: true, message: 'URL de imagen inválida' })
+      return
+    }
     setFormData((prev) => ({ ...prev, imageUrl: value, image: value }))
     setPhotoPreview(value)
   }
@@ -107,56 +156,113 @@ const MenuManagement = ({ menuItems, availableCategories = [], addMenuItem, upda
   const handleSaveCategory = async () => {
     const cleanName = categoryInput.trim()
     if (!cleanName) {
-      return alert('Ingrese un nombre de categoría válido.')
+      setError({ isOpen: true, message: 'Ingrese un nombre de categoría válido.' })
+      return
     }
-    if (categoryList.includes(cleanName.toLowerCase())) {
-      return alert('Esa categoría ya existe.')
+    
+    // Normalizar comparación
+    const normalizedCats = categoryList.map(cat => cat.toLowerCase())
+    if (normalizedCats.includes(cleanName.toLowerCase())) {
+      setError({ isOpen: true, message: 'Esa categoría ya existe.' })
+      return
     }
     
     try {
-      await addCategory({
-        name: cleanName,
-        display_order: categoryList.length
-      })
-      closeModal()
+      if (addCategory && typeof addCategory === 'function') {
+        await addCategory({
+          name: cleanName,
+          display_order: categoryList.length
+        })
+        closeModal()
+      } else {
+        throw new Error('La función addCategory no está disponible')
+      }
     } catch (error) {
-      alert('Error al crear categoría: ' + error.message)
+      console.error('Error al guardar categoría:', error)
+      setError({ isOpen: true, message: 'Error al crear categoría: ' + error.message })
     }
   }
 
   const handleSaveProduct = async () => {
-    if (!formData.name.trim()) return alert('El producto necesita un nombre.')
-    const priceNumber = Number(formData.price)
-    if (!priceNumber || Number.isNaN(priceNumber)) return alert('Precio normal inválido.')
+    // Validaciones
+    if (!formData.name.trim()) {
+      setError({ isOpen: true, message: 'El producto necesita un nombre.' })
+      return
+    }
     
-    // Encontrar el ID de la categoría
+    const priceNumber = Number(formData.price)
+    if (!priceNumber || Number.isNaN(priceNumber) || priceNumber <= 0) {
+      setError({ isOpen: true, message: 'Precio normal inválido. Debe ser un número positivo.' })
+      return
+    }
+    
+    // Validar precio grande si se proporcionó
+    let priceLargeNumber = null
+    if (formData.priceLarge) {
+      priceLargeNumber = Number(formData.priceLarge)
+      if (Number.isNaN(priceLargeNumber) || priceLargeNumber <= 0) {
+        setError({ isOpen: true, message: 'Precio grande inválido. Debe ser un número positivo.' })
+        return
+      }
+    }
+    
+    // Corrección: Mapeo flexible de categorías
     const categoryName = formData.category.trim() || 'extras'
-    const categoryMap = {
+    
+    // Intentar encontrar la categoría en el array existente
+    let categoryId = null
+    
+    // Si tienes las categorías con IDs, mejor usa un mapa dinámico
+    // Por ahora, intentamos buscar si existe una función o contexto para obtener el ID
+    // Este mapeo es estático pero puedes mejorarlo según tu backend
+    const staticCategoryMap = {
       'pizzas': 1,
       'bebidas': 2, 
       'combos': 3,
-      'postres': 4
+      'postres': 4,
+      'extras': 1
     }
-    const categoryId = categoryMap[categoryName.toLowerCase()] || 1
+    categoryId = staticCategoryMap[categoryName.toLowerCase()] || 1
     
     const item = {
       name: formData.name.trim(),
       category_id: categoryId,
+      category: categoryName, // También enviar el nombre por si acaso
       description: formData.description.trim(),
       price_small: priceNumber,
-      price_large: formData.priceLarge ? Number(formData.priceLarge) : null,
+      price_large: priceLargeNumber,
       image: formData.image || formData.imageUrl || '',
     }
 
     try {
       if (modalMode === 'edit' && editingItem) {
-        await updateMenuItem(editingItem.id, item)
+        if (updateMenuItem && typeof updateMenuItem === 'function') {
+          await updateMenuItem(editingItem.id, item)
+        } else {
+          throw new Error('La función updateMenuItem no está disponible')
+        }
       } else {
-        await addMenuItem(item)
+        if (addMenuItem && typeof addMenuItem === 'function') {
+          await addMenuItem(item)
+        } else {
+          throw new Error('La función addMenuItem no está disponible')
+        }
       }
       closeModal()
     } catch (error) {
-      alert('Error al guardar producto: ' + error.message)
+      console.error('Error al guardar producto:', error)
+      setError({ isOpen: true, message: 'Error al guardar producto: ' + error.message })
+    }
+  }
+
+  const handleDeleteItem = async (id) => {
+    if (window.confirm('¿Estás seguro de que quieres eliminar este producto?')) {
+      try {
+        await deleteMenuItem(id)
+      } catch (error) {
+        console.error('Error al eliminar producto:', error)
+        setError({ isOpen: true, message: 'Error al eliminar producto: ' + error.message })
+      }
     }
   }
 
@@ -169,7 +275,7 @@ const MenuManagement = ({ menuItems, availableCategories = [], addMenuItem, upda
       'bebidas': darkMode ? 'from-amarillo/20 to-transparent text-amarillo border-amarillo/30' : 'from-yellow-100 to-transparent text-yellow-600 border-yellow-200',
       'postres': darkMode ? 'from-vinotinto/20 to-transparent text-vinotinto border-vinotinto/30' : 'from-red-100 to-transparent text-red-600 border-red-200',
     }
-    return colors[cat] || (darkMode ? 'from-/10 to-transparent text-white border-white/20' : 'from-gray-100 to-transparent text-gray-600 border-gray-200')
+    return colors[cat] || (darkMode ? 'from-white/10 to-transparent text-white border-white/20' : 'from-gray-100 to-transparent text-gray-600 border-gray-200')
   }
 
   // Clases CSS condicionales basadas en el tema
@@ -185,35 +291,56 @@ const MenuManagement = ({ menuItems, availableCategories = [], addMenuItem, upda
 
   return (
     <section className={sectionClass}>
-      {/* Header con título y botón de agregar */}
-      <div className='mb-8 flex items-center justify-between gap-4'>
+      {/* Componente de error/toast */}
+      {error.isOpen && (
+        <div className="fixed top-4 right-4 z-50 animate-fade-in">
+          <div className="rounded-2xl bg-red-600 px-6 py-3 text-white shadow-xl">
+            <div className="flex items-center gap-3">
+              <span>⚠️</span>
+              <p>{error.message}</p>
+              <button 
+                onClick={() => setError({ isOpen: false, message: '' })}
+                className="ml-4 text-white/80 hover:text-white"
+              >
+                ✕
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Header con título y botones */}
+      <div className='mb-8 flex flex-wrap items-center justify-between gap-4'>
         <div>
           <p className='text-sm uppercase tracking-[0.35em] text-naranja font-semibold'>
-            Gestion de menu
+            Gestión de menú
           </p>
           <h2 className={'mt-2 text-3xl font-bold ' + textMain}>
             Productos disponibles
             <span className='ml-2 inline-flex items-center justify-center w-2 h-2 rounded-full bg-verde animate-pulse' />
           </h2>
         </div>
-        <button
-          type='button'
-          onClick={() => openProductModal('create')}
-          className='group relative inline-flex items-center justify-center gap-2 rounded-full bg-gradient-to-r from-naranja to-amarillo px-6 py-3 text-sm font-bold text-gris-oscuro shadow-lg shadow-verde/30 transition-all duration-300 hover:scale-[1.05] hover:shadow-[0_0_30px_rgba(255,127,17,0.4)] active:scale-[0.98] overflow-hidden'
-        >
-          <div className='absolute inset-0 bg-gradient-to-r from-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity' />
-          <span className='relative'>+</span>
-          <span className='relative'>Agregar producto</span>
-        </button>
-        <button
-          type='button'
-          onClick={openCategoryModal}
-          className='rounded-full border border-red-600/40 bg-red-600 px-5 py-3 text-sm font-semibold text-white transition-all duration-300 hover:bg-red-500 hover:border-red-500/40'
-        >
-          Nueva categoría
-        </button>
+        <div className='flex gap-3'>
+          <button
+            type='button'
+            onClick={() => openProductModal('create')}
+            className='group relative inline-flex items-center justify-center gap-2 rounded-full bg-gradient-to-r from-naranja to-amarillo px-6 py-3 text-sm font-bold text-gris-oscuro shadow-lg shadow-verde/30 transition-all duration-300 hover:scale-[1.05] hover:shadow-[0_0_30px_rgba(255,127,17,0.4)] active:scale-[0.98] overflow-hidden'
+          >
+            <div className='absolute inset-0 bg-gradient-to-r from-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity' />
+            <span className='relative'>+</span>
+            <span className='relative'>Agregar producto</span>
+          </button>
+          <button
+            type='button'
+            onClick={openCategoryModal}
+            className='rounded-full border border-red-600/40 bg-red-600 px-5 py-3 text-sm font-semibold text-white transition-all duration-300 hover:bg-red-500 hover:border-red-500/40'
+          >
+            Nueva categoría
+          </button>
+        </div>
       </div>
 
+      {/* Sección de categorías disponibles */}
       <div className='mb-8 rounded-[2rem] border border-white/10 bg-white/5 p-6 shadow-lg shadow-black/10 backdrop-blur-sm'>
         <div className='flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between'>
           <div>
@@ -243,12 +370,12 @@ const MenuManagement = ({ menuItems, availableCategories = [], addMenuItem, upda
       <div className='grid gap-5 md:grid-cols-2'>
         {menuItems.map((item, idx) => (
           <div
-            key={item.id}
+            key={item.id || idx}
             className={'group rounded-3xl border p-6 transition-all duration-300 hover:scale-[1.02] hover:shadow-2xl animate-fade-in ' + (darkMode ? 'border-white/10 bg-gradient-to-br from-[#1a1a1a] via-[#161616] to-[#111111] hover:border-naranja/20 hover:shadow-naranja/10' : 'border-gray-200 bg-gradient-to-br from-white to-gray-100 hover:border-orange-300 hover:shadow-xl hover:shadow-blue-200/50')}
             style={{ animationDelay: `${idx * 80}ms` }}
           >
             {/* Información del producto */}
-            <div className='flex items-start justify-between gap-4'>
+            <div className='flex flex-wrap items-start justify-between gap-4'>
               <div className='flex-1'>
                 <h3 className={'text-lg font-bold transition-colors ' + (darkMode ? 'text-white group-hover:text-naranja' : 'text-gray-900 group-hover:text-naranja')}>
                   {item.name}
@@ -265,11 +392,11 @@ const MenuManagement = ({ menuItems, availableCategories = [], addMenuItem, upda
             </div>
 
             {/* Precios y acciones */}
-            <div className={'mt-5 flex items-center justify-between gap-4 p-3 rounded-xl border ' + (darkMode ? 'bg-negro/30 border-white/5' : 'bg-gradient-to-br from-gray-50 to-blue-50 border-gray-200')}>
+            <div className={'mt-5 flex flex-wrap items-center justify-between gap-4 p-3 rounded-xl border ' + (darkMode ? 'bg-negro/30 border-white/5' : 'bg-gradient-to-br from-gray-50 to-blue-50 border-gray-200')}>
               <div>
-                <p className='text-2xl font-bold text-amarillo'>${item.price.toLocaleString()}</p>
-                {item.priceLarge && (
-                  <p className='text-xs text-texto-muted'>Grande: ${item.priceLarge.toLocaleString()}</p>
+                <p className='text-2xl font-bold text-amarillo'>${item.price?.toLocaleString() || item.price_small?.toLocaleString() || 0}</p>
+                {(item.priceLarge || item.price_large) && (
+                  <p className='text-xs text-texto-muted'>Grande: ${(item.priceLarge || item.price_large).toLocaleString()}</p>
                 )}
               </div>
               <div className='flex gap-2'>
@@ -283,7 +410,7 @@ const MenuManagement = ({ menuItems, availableCategories = [], addMenuItem, upda
                 </button>
                 <button
                   type='button'
-                  onClick={() => deleteMenuItem(item.id)}
+                  onClick={() => handleDeleteItem(item.id)}
                   className='inline-flex items-center justify-center rounded-full bg-gradient-to-r from-red-600 to-red-500 px-4 py-2 text-sm font-semibold text-white transition-all duration-300 hover:from-red-500 hover:to-red-400 hover:scale-105 hover:shadow-lg hover:shadow-red-500/20'
                 >
                   <span className='group-hover:scale-110 transition-transform'>🗑️</span>
@@ -300,7 +427,7 @@ const MenuManagement = ({ menuItems, availableCategories = [], addMenuItem, upda
           <div className='mb-4 flex h-20 w-20 items-center justify-center rounded-full bg-white/5'>
             <span className='text-4xl'>📋</span>
           </div>
-          <p className='text-texto-muted'>No hay productos registrados aun.</p>
+          <p className='text-texto-muted'>No hay productos registrados aún.</p>
           <button
             onClick={() => openProductModal('create')}
             className='mt-4 rounded-full bg-naranja px-6 py-2 text-sm font-semibold text-gris-oscuro hover:scale-105 transition-transform'
@@ -310,12 +437,15 @@ const MenuManagement = ({ menuItems, availableCategories = [], addMenuItem, upda
         </div>
       )}
 
+      {/* Modal */}
       {isModalOpen && (
-        <div className='fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4'>
+        <div className='fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4' onClick={(e) => {
+          if (e.target === e.currentTarget) closeModal()
+        }}>
           <div className={'w-full max-w-2xl max-h-[calc(100vh-4rem)] overflow-hidden overflow-y-auto rounded-[2rem] border border-white/10 p-6 shadow-2xl ' + bgPanel}>
             <div className='mb-4 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between'>
               <div>
-                <h3 className='text-2xl font-bold text-white'>
+                <h3 className={'text-2xl font-bold ' + (darkMode ? 'text-white' : 'text-gray-900')}>
                   {modalType === 'category' ? 'Nueva categoría' : modalMode === 'edit' ? 'Editar producto' : 'Agregar producto'}
                 </h3>
                 <p className='mt-2 text-sm text-white/70'>
@@ -341,6 +471,7 @@ const MenuManagement = ({ menuItems, availableCategories = [], addMenuItem, upda
                   value={categoryInput}
                   onChange={(e) => setCategoryInput(e.target.value)}
                   placeholder='Ej. pizzas'
+                  maxLength="50"
                   className={inputClass}
                 />
                 <div className='flex justify-end gap-3'>
@@ -349,7 +480,7 @@ const MenuManagement = ({ menuItems, availableCategories = [], addMenuItem, upda
                     onClick={closeModal}
                     className='rounded-full bg-red-600 px-5 py-3 text-sm font-semibold text-white transition hover:bg-red-500'
                   >
-                    ✕
+                    Cancelar
                   </button>
                   <button
                     type='button'
@@ -370,6 +501,7 @@ const MenuManagement = ({ menuItems, availableCategories = [], addMenuItem, upda
                       value={formData.name}
                       onChange={(e) => setFormData((prev) => ({ ...prev, name: e.target.value }))}
                       placeholder='Ej. Pizza Mexicana'
+                      maxLength="30"
                       className={inputClass}
                     />
                   </label>
@@ -396,6 +528,7 @@ const MenuManagement = ({ menuItems, availableCategories = [], addMenuItem, upda
                     onChange={(e) => setFormData((prev) => ({ ...prev, description: e.target.value }))}
                     rows='4'
                     placeholder='Descripción breve del producto'
+                    maxLength="40"
                     className={inputClass}
                   />
                 </label>
@@ -405,9 +538,11 @@ const MenuManagement = ({ menuItems, availableCategories = [], addMenuItem, upda
                     <span className='text-sm font-semibold text-white'>Precio</span>
                     <input
                       type='number'
+                      step='any'
                       value={formData.price}
                       onChange={(e) => setFormData((prev) => ({ ...prev, price: e.target.value }))}
                       placeholder='0'
+                      maxLength="10"
                       className={inputClass}
                     />
                   </label>
@@ -415,9 +550,11 @@ const MenuManagement = ({ menuItems, availableCategories = [], addMenuItem, upda
                     <span className='text-sm font-semibold text-white'>Precio grande (opcional)</span>
                     <input
                       type='number'
+                      step='any'
                       value={formData.priceLarge}
                       onChange={(e) => setFormData((prev) => ({ ...prev, priceLarge: e.target.value }))}
                       placeholder='0'
+                      maxLength="10"
                       className={inputClass}
                     />
                   </label>
@@ -435,6 +572,7 @@ const MenuManagement = ({ menuItems, availableCategories = [], addMenuItem, upda
                       value={formData.imageUrl}
                       onChange={(e) => handleImageUrlChange(e.target.value)}
                       placeholder='https://...'
+                      maxLength="100"
                       className={inputClass}
                     />
                   </label>
@@ -453,7 +591,7 @@ const MenuManagement = ({ menuItems, availableCategories = [], addMenuItem, upda
                     onClick={closeModal}
                     className='rounded-full bg-red-600 px-6 py-3 text-sm font-semibold text-white transition hover:bg-red-500'
                   >
-                    ✕
+                    Cancelar
                   </button>
                   <button
                     type='button'

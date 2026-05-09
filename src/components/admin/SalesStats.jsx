@@ -38,10 +38,17 @@ const SalesStats = () => {
   const fetchStats = async () => {
     try {
       const token = localStorage.getItem('adminToken')
-      const res = await axios.get('http://localhost:3001/api/stats', {
+      const res = await axios.get('http://localhost:3001/api/orders/stats', {
         headers: { Authorization: `Bearer ${token}` }
       })
-      setStats(res.data)
+      setStats({
+        daily: res.data.daily.earnings,
+        weekly: res.data.weekly.earnings,
+        monthly: res.data.monthly.earnings,
+        totalOrders: res.data.totalOrders,
+        weeklyData: res.data.weeklyData,
+        monthlyData: res.data.monthlyData
+      })
       setLoading(false)
     } catch (error) {
       console.error('Error fetching stats:', error)
